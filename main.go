@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"github.com/Anv3sh/go-fiber-postgres/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -34,13 +33,11 @@ func (r *Repository) CreateBook(context *fiber.Ctx) error{
 	 err = r.DB.Create(&book).Error
 	 if err!=nil{
 		  context.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"mesage":"could not create book"}
-		  )
+			&fiber.Map{"mesage":"could not create book"})
 		  return err
 	 }
 	 context.Status(http.StatusOK).JSON(
-		&fiber.Map{"message":"book has been created"}
-	)
+		&fiber.Map{"message":"book has been created"})
 	return nil
 }
 
@@ -49,8 +46,7 @@ func (r *Repository) GetBooks(context *fiber.Ctx) error{
 		err := r.DB.Find(bookModels).Error
 		if err != nil{
 			context.Satus(http.StatusBadRequest).JSON(
-				&fiber.Map{"message":"could not get books"}
-			)
+				&fiber.Map{"message":"could not get books"})
 			return err
 		}
 		context.Status(http.StatusOK).JSON(
@@ -60,6 +56,27 @@ func (r *Repository) GetBooks(context *fiber.Ctx) error{
 		return nil
 }
 
+func (r *Repository) DeleteBook(context *fiber.Ctx) error{
+	bookModel := models.Books{}
+	id := context.Params("id")
+	if id == ""{
+		context.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message":"id cannot be empty",
+		})
+		return nil
+	}
+	err := r.DB.Delete(bookModel,id)
+	if err.Error != nil{
+		contect.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message":"could not delete book",
+		})
+		return err.Error
+	}
+	context.Status(http.StatusOK).JSON(&fiber.Map{
+		"message":"book deleted successfully",
+	})
+	return nil
+}
 func (r *Repository) SetupRoutes(app *fiber.App){
 	api := app.Group("/api")
 	api.Post("/create_books",r.CreateBook)
@@ -77,10 +94,10 @@ func main(){
 	config = &storage.Config{
 		Host: os.Getenv("DB_HOST"),
 		Port: os.Getenv("DB_PORT"),
-		Password: os.Getenv("DB_PASS")
-		User: os.Getenv("DB_USER")
-		DBName: os.Getenv("DB_NAME")
-		SSLMode: os.Getenv("DB_SSLMODE")
+		Password: os.Getenv("DB_PASS"),
+		User: os.Getenv("DB_USER"),
+		DBName: os.Getenv("DB_NAME"),
+		SSLMode: os.Getenv("DB_SSLMODE"),
 	}
 
 	db,err := storage.NewConnection(config.storage)
